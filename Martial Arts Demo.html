@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Triggers</title>
+    <!-- Define custom css classes for creating a chat bubble. Ref: https://codepen.io/Founts/pen/AJyVOr -->
+    <style>
+    .cb {
+      margin: 40px;
+      display: inline-block;
+      position: absolute;
+      width: 200px;
+      text-align: center;
+      height: auto;
+      bottom: 77px;
+      right: 0px;
+      background-color: rgb(230, 125, 5);
+      padding: 10px;
+      display: none;
+    }
+    .tri-right.btm-right:after{
+      content: ' ';
+      position: absolute;
+      width: 0;
+      height: 0;
+      left: auto;
+      right: 0px;
+      bottom: -20px;
+      border: 12px solid;
+      border-color:  rgb(230, 125, 5)  rgb(230, 125, 5) transparent transparent;
+    }
+    </style>
+  </head>
+ 
+  <body>
+    <!-- Div for the chat bubble -->
+    <div id="msgDiv" class="cb tri-right btm-right">
+    <script src="https://cdn.botpress.cloud/webchat/v1/inject.js"></script>
+<script src="https://mediafiles.botpress.cloud/b5ea3a44-fd06-4d92-ac8b-da55b6249cb3/webchat/config.js" defer></script>
+    <script>
+      // Variable to keep track of whether or not the chat window is open. The chat bubble is onlt shown when the chat window is closed
+      let isChatOpen = false
+      window.botpressWebChat.onEvent(
+        function (event) {
+          if (event.type === 'LIFECYCLE.LOADED') {
+            window.botpressWebChat.sendEvent({ type: 'hide' })
+          }
+          else if (event.type === 'LIFECYCLE.READY') {
+            // Send a custom trigger to the chatbot after a 3 sec timer
+            setTimeout(() => {
+              window.botpressWebChat.sendPayload({
+                type: 'trigger',
+                payload: {},
+              })
+              console.log('Payload triggered 3 seconds after page fully loaded')
+            }, 3000); 
+          } else if (event.type === 'TRIGGER') {
+            // This section is to catch events sent from the chatbot
+            if (!isChatOpen && event.value && event.value.msg) {
+              // Display the chat bubble if the chat window is closed and a valid message is received from the chatbot
+              document.getElementById('msgDiv').style = "display: block";
+              document.getElementById('msgDiv').innerText = event.value.msg;
+            }
+          } else if (event.type === 'UI.OPENED') {
+            // Hides the chat bubble if the chat window has been opened and updates the boolean variable
+            isChatOpen = true
+            document.getElementById('msgDiv').style = "display: none";
+          } else if (event.type === 'UI.CLOSED') {
+            // Updates the chat bubble if the chat window is closed. This allows the chat bubble to be displayed again
+            // if the chatbot sends a new event
+            isChatOpen = false
+          }
+        },
+        // The list of events that we want to handle
+        ['LIFECYCLE.LOADED', 'LIFECYCLE.READY', 'TRIGGER', 'UI.OPENED', 'UI.CLOSED']
+      )
+    </script>
+    </div>
+  </body>
+</html>
+
